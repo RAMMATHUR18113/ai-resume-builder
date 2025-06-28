@@ -5,11 +5,12 @@ import { LoaderCircle } from 'lucide-react';
 import React, { useContext, useEffect, useState } from 'react';
 import GlobalApi from '../../../../../service/GlobalApi';
 import { toast } from 'sonner';
-
+import { useParams } from 'react-router-dom';
 function PersonalDetail({ enabledNext }) {
   const { resumeInfo, setResumeInfo } = useContext(ResumeInfoContext);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
+  const { resumeId } = useParams(); // UUID from route
 
   useEffect(() => {
     if (resumeInfo?.attributes) {
@@ -48,8 +49,8 @@ function PersonalDetail({ enabledNext }) {
     e.preventDefault();
     setLoading(true);
 
-    if (!resumeInfo?.id) {
-      toast.error("Resume ID is missing.");
+    if (!resumeId) {
+      toast.error("Resume ID is missing.\n{"+resumeId+"}");
       setLoading(false);
       return;
     }
@@ -57,13 +58,13 @@ function PersonalDetail({ enabledNext }) {
     const data = { data: formData };
 
     try {
-      const resp = await GlobalApi.UpdateResumeDetail(resumeInfo?.id, data);
+      const resp = await GlobalApi.UpdateResumeDetail(resumeId, data);
       console.log("✅ Updated:", resp);
       toast.success("Details updated");
       enabledNext(true);
     } catch (error) {
       console.error("❌ Update failed", error);
-      toast.error("Failed to update. Try again./n"+error);
+      toast.error("Failed to update. Try again.\n"+resumeId + "\n"+error);
     } finally {
       setLoading(false);
     }
