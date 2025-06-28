@@ -13,14 +13,14 @@ function PersonalDetail({ enabledNext }) {
   const { resumeId } = useParams(); // UUID from route
 
   useEffect(() => {
-    if (resumeInfo?.attributes) {
+    if (resumeInfo) {
       setFormData({
-        firstName: resumeInfo.attributes.firstName || '',
-        lastName: resumeInfo.attributes.lastName || '',
-        jobTitle: resumeInfo.attributes.jobTitle || '',
-        address: resumeInfo.attributes.address || '',
-        phone: resumeInfo.attributes.phone || '',
-        email: resumeInfo.attributes.email || ''
+        firstName: resumeInfo.firstName || '',
+        lastName: resumeInfo.lastName || '',
+        jobTitle: resumeInfo.jobTitle || '',
+        address: resumeInfo.address || '',
+        phone: resumeInfo.phone || '',
+        email: resumeInfo.email || ''
       });
     }
   }, [resumeInfo]);
