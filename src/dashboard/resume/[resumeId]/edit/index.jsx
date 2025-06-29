@@ -18,7 +18,7 @@ function EditResume() {
   const GetResumeInfo = async () => {
     try {
       const resp = await GlobalApi.GetResumeByResumeId(resumeId);
-      const resumeData = resp.data?.data?.[0]; // Get first match from response
+      const resumeData = resp.data?.data; // Get first match from response
 
       if (resumeData) {
         setResumeInfo({

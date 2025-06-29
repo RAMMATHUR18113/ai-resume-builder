@@ -5,65 +5,64 @@ import '@smastrom/react-rating/style.css'
 import { Button } from '@/components/ui/button'
 import { LoaderCircle } from 'lucide-react'
 import { ResumeInfoContext } from '@/context/ResumeInfoContext'
-import GlobalApi from '../../../../../service/GlobalApi'
+import GlobalApi from './../../../../../service/GlobalApi'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 function Skills() {
   const [skillsList, setSkillsList] = useState([{ name: '', rating: 0 }]);
-  const { resumeInfo, setResumeInfo } = useContext(ResumeInfoContext);
-  const { resumeId } = useParams();
+  const params = useParams();
   const [loading, setLoading] = useState(false);
+  const { resumeInfo, setResumeInfo } = useContext(ResumeInfoContext);
 
   useEffect(() => {
-    if (resumeInfo?.attributes?.skills?.length > 0) {
-      setSkillsList(resumeInfo.attributes.skills);
+    // Safety check: if skills is an array, use it. Otherwise, use default fallback
+    if (Array.isArray(resumeInfo?.skills)) {
+      setSkillsList(resumeInfo.skills);
+    } else {
+      setSkillsList([{ name: '', rating: 0 }]);
     }
   }, [resumeInfo]);
 
   const handleChange = (index, name, value) => {
-    const updated = [...skillsList];
-    updated[index][name] = value;
-    setSkillsList(updated);
+    const newEntries = [...skillsList];
+    newEntries[index][name] = value;
+    setSkillsList(newEntries);
   };
 
   const AddNewSkills = () => {
-    setSkillsList(prev => [...prev, { name: '', rating: 0 }]);
+    setSkillsList([...skillsList, { name: '', rating: 0 }]);
   };
 
   const RemoveSkills = () => {
-    setSkillsList(prev => prev.slice(0, -1));
+    setSkillsList((prev) => prev.slice(0, -1));
   };
 
-  const onSave = async () => {
+  const onSave = () => {
     setLoading(true);
     const data = {
       data: {
-        skills: skillsList.map(({ id, ...rest }) => rest)
-      }
+        skills: skillsList.map(({ id, ...rest }) => rest),
+      },
     };
 
-    try {
-      const res = await GlobalApi.UpdateResumeDetail(resumeInfo?.id || resumeId, data);
-      toast('Details updated!');
-    } catch (err) {
-      toast('Server Error, Try again!');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    GlobalApi.UpdateResumeDetail(params?.resumeId, data)
+      .then((resp) => {
+        console.log(resp);
+        setLoading(false);
+        toast('Details updated!');
+      })
+      .catch((error) => {
+        setLoading(false);
+        toast('Server Error, Try again!');
+      });
   };
 
   useEffect(() => {
-    if (resumeInfo?.attributes) {
-      setResumeInfo({
-        ...resumeInfo,
-        attributes: {
-          ...resumeInfo.attributes,
-          skills: skillsList
-        }
-      });
-    }
+    setResumeInfo({
+      ...resumeInfo,
+      skills: skillsList,
+    });
   }, [skillsList]);
 
   return (
@@ -72,29 +71,36 @@ function Skills() {
       <p>Add Your top professional key skills</p>
 
       <div>
-        {skillsList.map((item, index) => (
-          <div key={index} className='flex justify-between mb-2 border rounded-lg p-3'>
-            <div>
-              <label className='text-xs'>Name</label>
-              <Input
-                className="w-full"
-                value={item.name}
-                onChange={(e) => handleChange(index, 'name', e.target.value)}
+        {Array.isArray(skillsList) &&
+          skillsList.map((item, index) => (
+            <div
+              key={index}
+              className='flex justify-between mb-2 border rounded-lg p-3'>
+              <div>
+                <label className='text-xs'>Name</label>
+                <Input
+                  className='w-full'
+                  value={item.name}
+                  onChange={(e) => handleChange(index, 'name', e.target.value)}
+                />
+              </div>
+              <Rating
+                style={{ maxWidth: 120 }}
+                value={item.rating}
+                onChange={(v) => handleChange(index, 'rating', v)}
               />
             </div>
-            <Rating
-              style={{ maxWidth: 120 }}
-              value={item.rating}
-              onChange={(v) => handleChange(index, 'rating', v)}
-            />
-          </div>
-        ))}
+          ))}
       </div>
 
       <div className='flex justify-between'>
         <div className='flex gap-2'>
-          <Button variant="outline" onClick={AddNewSkills} className="text-primary"> + Add More Skill</Button>
-          <Button variant="outline" onClick={RemoveSkills} className="text-primary"> - Remove</Button>
+          <Button variant='outline' onClick={AddNewSkills} className='text-primary'>
+            + Add More Skill
+          </Button>
+          <Button variant='outline' onClick={RemoveSkills} className='text-primary'>
+            - Remove
+          </Button>
         </div>
         <Button disabled={loading} onClick={onSave}>
           {loading ? <LoaderCircle className='animate-spin' /> : 'Save'}
